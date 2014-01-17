@@ -1,0 +1,53 @@
+import forecastio
+import datetime
+import xlrd
+import xlwt
+
+def main():
+
+
+    api_key = "API KEY"
+    lat = LAT
+    lng = LONG
+    
+    workbook = xlrd.open_workbook('FILE NAME DATES')
+    worksheet = workbook.sheet_by_name('Sheet1')
+    bookwrite = xlwt.Workbook()
+    sheetwrite = bookwrite.add_sheet('Sheet1')
+    
+    num_rows = worksheet.nrows - 1
+    num_cells = worksheet.ncols - 1
+    curr_row = -1
+    while curr_row < num_rows:
+        curr_row += 1
+        row = worksheet.row(curr_row)
+        curr_cell = -1
+        while curr_cell < num_cells:
+            curr_cell += 1
+            cell_value = worksheet.cell_value(curr_row, curr_cell)
+            
+            # The dates are formatted like "06-May-11  6:23 PM". This transforms them to be formatted like "06-May-11 06:23 PM". Notice the added zero padding
+            splitDate = cell_value.split(" ")
+            dateString = splitDate[1]
+            timeString = splitDate[3] + " " + splitDate[4]
+            if len(timeString) == 7:
+                # It is missing the 0 padding
+                timeString = "0" + timeString
+            newDateString = dateString + " " + timeString
+            
+            time = datetime.datetime.strptime(newDateString, "%d-%b-%y %I:%M %p")
+            
+            print "This is the time: ", time
+    
+            forecast = forecastio.load_forecast(api_key, lat, lng, time)
+            
+            print "===========Temperature========="
+            by_temp = forecast.currently()
+            temperature = by_temp.temperature
+            print "Temperature: ", temperature
+            sheetwrite.write(curr_row, 0,temperature)
+            
+    bookwrite.save('CREATE FILE NAME FOR TEMPERATURES')     
+
+if __name__ == "__main__":
+    main()
